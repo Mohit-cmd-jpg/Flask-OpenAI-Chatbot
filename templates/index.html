@@ -121,29 +121,7 @@
     }
   </style>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-</head>
-
-<body>
-  <div class="chat_window">
-    <div class="top_menu">Mohit’s AI Chatbot 🤖</div>
-
-    <ul class="messages"></ul>
-
-    <div class="bottom_wrapper">
-      <input
-        class="message_input"
-        placeholder="Type your message here..."
-      />
-      <button class="send_message">Send</button>
-    </div>
-  </div>
-
-  <footer>
-    <p>© 2025 Mohit Kumar | Built with Flask & OpenAI API</p>
-  </footer>
-
- <script>
+<script>
 (function () {
   var Message = function (arg) {
     this.text = arg.text;
@@ -172,9 +150,10 @@
       return $(".message_input").val();
     };
 
-    sendMessage = async function (text) {
-      if (text.trim() === "") return;
-
+    sendMessage = function (text) {
+      if (text.trim() === "") {
+        return;
+      }
       $(".message_input").val("");
       var message = new Message({
         text: text,
@@ -182,33 +161,31 @@
       });
       message.draw();
 
-      try {
-        const response = await fetch("/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ message: text }),
-        });
-
-        const data = await response.json();
-        var botMessage = new Message({
-          text: data.reply,
-          message_side: "left",
-        });
-        botMessage.draw();
-      } catch (error) {
-        var errorMessage = new Message({
-          text: "⚠️ Error connecting to the server. Please try again later.",
-          message_side: "left",
-        });
-        errorMessage.draw();
-      }
-
-      $(".messages").animate(
-        { scrollTop: $(".messages").prop("scrollHeight") },
-        300
-      );
+      // ✅ Use POST to /chat now
+      $.ajax({
+        url: "/chat",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ message: text }),
+        success: function (data) {
+          var botMessage = new Message({
+            text: data.reply,
+            message_side: "left",
+          });
+          botMessage.draw();
+          $(".messages").animate(
+            { scrollTop: $(".messages").prop("scrollHeight") },
+            300
+          );
+        },
+        error: function () {
+          var errorMsg = new Message({
+            text: "⚠️ Sorry, something went wrong. Please try again!",
+            message_side: "left",
+          });
+          errorMsg.draw();
+        },
+      });
     };
 
     $(".send_message").click(function () {
@@ -230,7 +207,6 @@
   });
 }.call(this));
 </script>
-
 
   <!-- Hidden message template -->
   <div class="message_template" style="display: none;">
