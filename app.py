@@ -5,7 +5,7 @@ import os
 import time
 
 # Initialize OpenAI client
-client = OpenAI(api_key="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")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Chatbot name and role
 name = "MohitBot"
