@@ -1,59 +1,32 @@
-# Import necessary libraries
 from flask import Flask, render_template, request, jsonify
-from openai import OpenAI
 import os
-import time
+from openai import OpenAI  # ✅ Correct import
 
-# Initialize OpenAI client
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Chatbot name and role
-name = "MohitBot"
-role = "helpful AI web assistant"
-
-# Define role instructions
-impersonated_role = f"""
-You are {name}, a {role}.
-Always reply helpfully and conversationally.
-Keep answers short, clear, and friendly.
-You are not an AI model — you’re {name}, Mohit’s assistant.
-"""
-
-# Initialize chat history
-chat_history = ""
-
-# Create Flask app
 app = Flask(__name__)
 
-# Function to get model response
-def chatcompletion(user_input, chat_history):
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        temperature=1,
-        messages=[
-            {"role": "system", "content": f"{impersonated_role}. Conversation history: {chat_history}"},
-            {"role": "user", "content": user_input},
-        ],
-    )
-    return response.choices[0].message.content.strip()
+# ✅ Initialize the OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Handle user input
-def get_response(user_input):
-    global chat_history
-    bot_reply = chatcompletion(user_input, chat_history)
-    chat_history += f"\nUser: {user_input}\n{name}: {bot_reply}\n"
-    return bot_reply
-
-# Routes
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
-@app.route("/get")
-def get_bot_response():
-    userText = request.args.get("msg")
-    return jsonify({"reply": get_response(userText)})
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_input = request.json["message"]
 
-# Run the app
+    # ✅ Generate chatbot reply
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a friendly and helpful AI chatbot."},
+            {"role": "user", "content": user_input}
+        ]
+    )
+
+    bot_reply = response.choices[0].message.content.strip()
+    return jsonify({"reply": bot_reply})
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True)
